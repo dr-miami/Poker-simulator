@@ -13,8 +13,13 @@
 #include <set>
 #include <cstdlib>
 #include <cmath>
-#include <termios.h>
-#include <unistd.h>
+
+#ifndef _WIN32
+#error "This project is Windows-only. Build it on Windows with MSVC or MinGW."
+#endif
+
+#include <conio.h>
+#include <windows.h>
 
 #include "miniaudio.h"
 
@@ -121,7 +126,7 @@ inline void printHeader() {
 }
 
 inline void clearScreen() {
-    std::cout << "\033[2J\033[H";
+    system("cls");
 }
 
 inline void printHand(const std::vector<Card>& hand, const std::vector<bool>& discard = {}) {
@@ -285,15 +290,7 @@ inline HandResult evaluateHand(const std::vector<Card>& hand) {
 }
 
 inline int getch() {
-    struct termios oldt, newt;
-    int ch;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    return ch;
+    return _getch();
 }
 
 inline void waitForEnter() {

@@ -1,6 +1,6 @@
-# 5-Card Draw Poker Engine (Linux Port)
+# 5-Card Draw Poker Engine (Windows)
 
-A terminal-based 5-Card Draw Poker game written in C++ for Linux. Built on top of a Texas Hold'em engine, this version introduces a full draw phase, a CPU AI opponent, and the same economy/audio system you already know, now fully portable to any POSIX system.
+A terminal-based 5-Card Draw Poker game written in C++ for Windows. This version is intentionally Windows-only and targets the native console APIs used for keyboard input and screen clearing.
 
 ---
 
@@ -37,9 +37,9 @@ A terminal-based 5-Card Draw Poker game written in C++ for Linux. Built on top o
 
 | Requirement | Notes |
 |---|---|
-| Linux (or any POSIX system) | Uses termios, ANSI escape sequences, POSIX threads |
+| Windows 10/11 | Uses Win32 console APIs and `_getch()` |
 | C++17 or later | Uses std::set, structured bindings, inline globals |
-| A C++ compiler | GCC or Clang (tested with g++ 9+) |
+| A Windows C++ compiler | MSVC or MinGW-w64 |
 | miniaudio.h | Single-header, no install needed — just drop it in |
 | Optional: sound files | WAV, MP3, or FLAC supported via miniaudio |
 
@@ -47,13 +47,19 @@ A terminal-based 5-Card Draw Poker game written in C++ for Linux. Built on top o
 
 ## Building
 
-With GCC (or Clang):
+With Microsoft Visual Studio or MinGW:
 
-```bash
-g++ -std=c++17 main5card.cpp -o poker5card -O2 -lpthread -ldl
+```bat
+cl /std:c++17 /EHsc src\main.cpp /Fe:poker.exe
 ```
 
-No special linking is required beyond `-lpthread` and `-ldl` for miniaudio.
+or:
+
+```bash
+g++ -std=c++17 src\main.cpp -o poker.exe
+```
+
+This project intentionally fails to build on non-Windows platforms.
 
 ---
 
@@ -126,16 +132,15 @@ This is intentionally beatable — it doesn't bluff, and it doesn't evaluate str
 
 ---
 
-## Porting Notes (from Windows)
+## Porting Notes
 
-The original Windows version used `<conio.h>`, `_getch()`, and `system("cls")`.  
-This Linux port replaces them with:
+This project is now intentionally Windows-only and uses the original Windows console approach:
 
-- `termios` for raw input (single-key reads, arrow keys)
-- ANSI escape sequences (`\033[2J\033[H`) for screen clearing
-- POSIX threads and dynamic linking for miniaudio
+- `<conio.h>` and `_getch()` for raw keyboard input
+- `system("cls")` for screen clearing
+- Win32 console APIs when needed
 
-All Windows‑specific headers have been removed, and the game now runs natively on Linux.
+Non-Windows builds are explicitly rejected at compile time.
 
 ---
 
