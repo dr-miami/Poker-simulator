@@ -13,13 +13,7 @@
 #include <set>
 #include <cstdlib>
 #include <cmath>
-
-#ifndef _WIN32
-#error "This project is Windows-only. Build it on Windows with MSVC or MinGW."
-#endif
-
 #include <conio.h>
-#include <windows.h>
 
 #include "miniaudio.h"
 
@@ -32,27 +26,32 @@
 #define GREEN   "\033[32m"
 #define MAGENTA "\033[35m"
 
+// Basic rules
 inline int playerBalance = 1000;
 inline int currentBet = 0;
 inline int startingRank = 2; 
 inline int numCPUs = 1;
 const int MAX_RAISES = 3; 
 
+// Ranks and symbols
 enum class Rank   { TWO = 2, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING, ACE };
 enum class Symbol { SPADES = 1, CLUBS = 2, DIAMONDS = 3, HEART = 4 };
 
+// Hand values in order of rank
 enum HandValue {
     HIGH_CARD = 1, PAIR = 2, TWO_PAIR = 3, THREE_KIND = 4,
     STRAIGHT = 5, FLUSH = 6, FULL_HOUSE = 7, FOUR_KIND = 8,
     STRAIGHT_FLUSH = 9, ROYAL_FLUSH = 10
 };
 
+// Needed to calculate hand value
 struct HandResult {
     HandValue value;
     int totalScore;
     std::string name;
 };
 
+// Calculates card value
 struct Card {
     Rank rank;
     Symbol symbol;
@@ -80,6 +79,7 @@ inline void sleepRandom() {
     sleepMs(500 + (rand() % 500));
 }
 
+// Bet actions and decisions for betting
 enum class BetAction { FOLD, CHECK, CALL, RAISE };
 
 struct Decision {
@@ -87,6 +87,7 @@ struct Decision {
     int amount;
 };
 
+// Decisions for CPU
 inline Decision cpuDecideBet(const std::vector<Card>& hand, int currentBetToCall, int raisesSoFar, int maxRaises) {
     HandResult hr = evaluateHand(hand);
     int score = hr.totalScore;
@@ -114,7 +115,7 @@ inline Decision cpuDecideBet(const std::vector<Card>& hand, int currentBetToCall
     }
 }
 
-// RESTORED ASCII BANNER
+// ASCII banner
 inline void printHeader() {
     std::cout << MAGENTA << BOLD;
     std::cout << "  ____     ____    _    ____  ____   ____      ____   ___   _  __ _____ ____  \n";
@@ -129,6 +130,7 @@ inline void clearScreen() {
     system("cls");
 }
 
+// Prints hand in terminal card for card
 inline void printHand(const std::vector<Card>& hand, const std::vector<bool>& discard = {}) {
     for (const auto& c : hand) {
         c.print();
@@ -149,6 +151,7 @@ inline void printHand(const std::vector<Card>& hand, const std::vector<bool>& di
     }
 }
 
+// CPU opponents
 inline void chooseOpponents() {
     std::cout << CYAN << "\nHow many CPUs do you want to play against? (1-4): " << RESET;
     while (!(std::cin >> numCPUs) || numCPUs < 1 || numCPUs > 4) {
@@ -160,6 +163,7 @@ inline void chooseOpponents() {
     std::cin.ignore(1000, '\n');
 }
 
+// Hand values and results
 inline HandResult evaluateHand(const std::vector<Card>& hand) {
     std::vector<Card> h = hand;
     std::sort(h.begin(), h.end(), [](const Card& a, const Card& b){ return a.rank > b.rank; });
@@ -168,7 +172,7 @@ inline HandResult evaluateHand(const std::vector<Card>& hand) {
     std::map<Symbol, int> sc;
     for (const auto& c : h) { rc[c.rank]++; sc[c.symbol]++; }
     
-    bool isFlush = false;
+    bool isFlush = false; // Flush
     Symbol flushSuit = Symbol::SPADES;
     for (auto const& [suit, cnt] : sc) {
         if (cnt >= 5) {
@@ -192,7 +196,7 @@ inline HandResult evaluateHand(const std::vector<Card>& hand) {
     for (const auto& c : h) uniqueRanksSet.insert(static_cast<int>(c.rank));
     std::vector<int> uniqueRanks(uniqueRanksSet.rbegin(), uniqueRanksSet.rend());
     
-    bool isStraight = false;
+    bool isStraight = false; // Straight
     int straightHigh = 0;
     
     for (size_t i = 0; i + 4 < uniqueRanks.size(); ++i) {
@@ -231,15 +235,15 @@ inline HandResult evaluateHand(const std::vector<Card>& hand) {
     }
     std::sort(kickers.rbegin(), kickers.rend());
     
-    HandValue v = HIGH_CARD;
+    HandValue v = HIGH_CARD; // High card
     int score = 0;
     const int BASE = 100000000;
     
-    bool isRoyal = (isFlush && isStraight && straightHigh == 14 && 
+    bool isRoyal = (isFlush && isStraight && straightHigh == 14 && //
                     uniqueRanksSet.count(13) && uniqueRanksSet.count(12) && 
                     uniqueRanksSet.count(11) && uniqueRanksSet.count(10));
-    
-    if (isRoyal) {
+    // This part calculates points' ranks
+    if (isRoyal) { 
         v = ROYAL_FLUSH;
         score = 9 * BASE;
     } else if (isFlush && isStraight) {
@@ -301,7 +305,7 @@ inline void waitForEnter() {
     }
 }
 
-inline void showFile(const std::string& fileName) {
+inline void showFile(const std::string& fileName) { // Checks if txt files work
     clearScreen(); 
     printHeader();
     
@@ -328,19 +332,19 @@ class Deck {
 private:
     std::vector<Card> cards;
 public:
-    Deck(int minRank = 2) {
+    Deck(int minRank = 2) { // Minimum rank to start the match
         for (int r = minRank; r <= 14; ++r) {
             for (int s = 1; s <= 4; ++s) {
                 cards.push_back({ static_cast<Rank>(r), static_cast<Symbol>(s) });
             }
         }
     }
-    void shuffleDeck() {
+    void shuffleDeck() { // Shuffles deck
         std::random_device rd; 
         std::mt19937 g(rd());
         std::shuffle(cards.begin(), cards.end(), g);
     }
-    Card drawCard() { 
+    Card drawCard() { // Draws cards
         if (cards.empty()) return {Rank::TWO, Symbol::SPADES};
         Card c = cards.back(); 
         cards.pop_back(); 
@@ -350,7 +354,7 @@ public:
     size_t remaining() const { return cards.size(); }
 };
 
-inline std::vector<bool> cpuDecide1(const std::vector<Card>& hand) {
+inline std::vector<bool> cpuDecide1(const std::vector<Card>& hand) { // CPU decisions
     std::map<Rank, int> rc;
     for (const auto& c : hand) rc[c.rank]++;
     std::vector<bool> d(5, false);

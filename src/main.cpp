@@ -2,6 +2,7 @@
 #include "miniaudio.h"
 #include "functions.hpp"
 
+// Phase for drawing cards for player
 void playerDrawPhase(std::vector<Card>& hand, Deck& deck, int currentTurn, int totalTurns, int potSize) {
     std::vector<bool> discard(5, false);
     while (true) {
@@ -42,6 +43,7 @@ void playerDrawPhase(std::vector<Card>& hand, Deck& deck, int currentTurn, int t
     }
 }
 
+// Betting round for player
 bool bettingRound(std::vector<Card>& pHand, std::vector<std::vector<Card>>& cpuHands,
                   std::vector<bool>& active, int& pot, int& betToCall,
                   int turnNum, int totalTurns, bool isPreDraw) {
@@ -170,6 +172,7 @@ bool bettingRound(std::vector<Card>& pHand, std::vector<std::vector<Card>>& cpuH
     return true;
 }
 
+// Main function to start a match
 void playGame(ma_engine* pMainEngine) {
     clearScreen(); 
     printHeader();
@@ -293,6 +296,7 @@ void playGame(ma_engine* pMainEngine) {
     waitForEnter();
 }
 
+// Main function to start the program
 int main() {
     ma_engine engine1;
     if (ma_engine_init(NULL, &engine1) != MA_SUCCESS) {
